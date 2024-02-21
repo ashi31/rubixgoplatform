@@ -79,6 +79,7 @@ const (
 	AddExplorerCmd                 string = "addexplorer"
 	RemoveExplorerCmd              string = "removeexplorer"
 	GetAllExplorerCmd              string = "getallexplorer"
+	PinRBTCmd                      string = "pinrbt"
 )
 
 var commands = []string{VersionCmd,
@@ -123,6 +124,7 @@ var commands = []string{VersionCmd,
 	DumpSmartContractTokenChainCmd,
 	GetTokenBlock,
 	GetSmartContractData,
+	PinRBTCmd,
 }
 var commandsHelp = []string{"To get tool version",
 	"To get help",
@@ -240,6 +242,7 @@ type Command struct {
 	executorAddr       string
 	latest             bool
 	links              []string
+	pinningAddress     string
 }
 
 func showVersion() {
@@ -432,6 +435,7 @@ func Run(args []string) {
 	flag.StringVar(&cmd.smartContractData, "sctData", "data", "Smart contract execution info")
 	flag.StringVar(&cmd.executorAddr, "executorAddr", "", "Smart contract Executor Address")
 	flag.StringVar(&links, "links", "", "Explorer url")
+	flag.StringVar(&cmd.pinningAddress, "pinningAddress", "", "Pinning address")
 
 	if len(os.Args) < 2 {
 		fmt.Println("Invalid Command")
@@ -583,6 +587,8 @@ func Run(args []string) {
 		cmd.removeExplorer()
 	case GetAllExplorerCmd:
 		cmd.getAllExplorer()
+	case PinRBTCmd:
+		cmd.PinRBT()
 	default:
 		cmd.log.Error("Invalid command")
 	}

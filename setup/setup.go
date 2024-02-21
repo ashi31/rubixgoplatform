@@ -62,6 +62,7 @@ const (
 	APIGetAllExplorer                   string = "/api/get-all-explorer"
 	APIAddExplorer                      string = "/api/add-explorer"
 	APIRemoveExplorer                   string = "/api/remove-explorer"
+	APIInitiatePinRBT                   string = "/api/initiate-pin-rbt"
 )
 
 // jwt.RegisteredClaims
