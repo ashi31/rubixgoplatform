@@ -571,7 +571,6 @@ func (c *Core) reqPledgeToken(req *ensweb.Request) *ensweb.Result {
 func (c *Core) updateReceiverToken(req *ensweb.Request) *ensweb.Result {
 	did := c.l.GetQuerry(req, "did")
 	var sr SendTokenRequest
-
 	err := c.l.ParseJSON(req, &sr)
 	crep := model.BasicResponse{
 		Status: false,
@@ -582,7 +581,9 @@ func (c *Core) updateReceiverToken(req *ensweb.Request) *ensweb.Result {
 		crep.Message = "Failed to parse json request"
 		return c.l.RenderJSON(req, &crep, http.StatusOK)
 	}
+	c.log.Debug("sr.TokenChainBlock", sr.TokenChainBlock)
 	b := block.InitBlock(sr.TokenChainBlock, nil)
+	c.log.Debug("Init block", b)
 	if b == nil {
 		c.log.Error("Invalid token chain block", "err", err)
 		crep.Message = "Invalid token chain block"

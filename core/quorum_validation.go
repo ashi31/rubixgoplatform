@@ -30,6 +30,7 @@ func (c *Core) validateSigner(b *block.Block) bool {
 		c.log.Error("failed to get signers", "err", err)
 		return false
 	}
+	c.log.Debug("Signers", signers)
 	for _, signer := range signers {
 		var dc did.DIDCrypto
 		switch b.GetTransType() {

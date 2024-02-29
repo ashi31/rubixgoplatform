@@ -530,30 +530,40 @@ func (c *Core) SetupForienDID(didStr string) (did.DIDCrypto, error) {
 
 }
 
+//Commented this function out and replaced it with previous SetupForienDIDQuorum function
+
+// func (c *Core) SetupForienDIDQuorum(didStr string) (did.DIDCrypto, error) {
+// 	err := c.FetchDID(didStr)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	dt, err := c.w.GetDID(didStr)
+// 	if err != nil {
+// 		c.log.Error("DID does not exist", "did", didStr)
+// 		return nil, fmt.Errorf("DID does not exist")
+// 	}
+
+// 	//To support NLSS backward compatibility,
+// 	//If the Quorum's did is created in light mode,
+// 	//it will initiate DIDQuorum_Lt, and if  it is in basic mode,
+// 	//it will initiate DIDQuorumc
+// 	switch dt.Type {
+// 	case did.LightDIDMode:
+// 		return did.InitDIDQuorum_Lt(didStr, c.didDir, ""), nil
+// 	case did.BasicDIDMode:
+// 		return did.InitDIDQuorumc(didStr, c.didDir, ""), nil
+// 	default:
+// 		return nil, fmt.Errorf("DID Type is not supported")
+// 	}
+
+// }
+
 func (c *Core) SetupForienDIDQuorum(didStr string) (did.DIDCrypto, error) {
 	err := c.FetchDID(didStr)
 	if err != nil {
 		return nil, err
 	}
-	dt, err := c.w.GetDID(didStr)
-	if err != nil {
-		c.log.Error("DID does not exist", "did", didStr)
-		return nil, fmt.Errorf("DID does not exist")
-	}
-
-	//To support NLSS backward compatibility,
-	//If the Quorum's did is created in light mode,
-	//it will initiate DIDQuorum_Lt, and if  it is in basic mode,
-	//it will initiate DIDQuorumc
-	switch dt.Type {
-	case did.LightDIDMode:
-		return did.InitDIDQuorum_Lt(didStr, c.didDir, ""), nil
-	case did.BasicDIDMode:
-		return did.InitDIDQuorumc(didStr, c.didDir, ""), nil
-	default:
-		return nil, fmt.Errorf("DID Type is not supported")
-	}
-
+	return did.InitDIDQuorumc(didStr, c.didDir, ""), nil
 }
 
 func (c *Core) FetchDID(did string) error {
