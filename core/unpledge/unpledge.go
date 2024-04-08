@@ -157,9 +157,23 @@ func (up *UnPledge) runUnpledge() {
 		}
 		st := time.Now()
 		t := list.Token
-		tt := token.RBTTokenType
-		if up.testNet {
+		unpledgetokendetails, err := up.w.ReadToken(t)
+		if err != nil {
+			up.log.Error("Failed to fetch unpledge token details ", err)
+			up.s.Delete(UnpledgeQueueTable, &UnpledgeTokenList{}, "token=?", t)
+			continue
+		}
+		var tt int
+		if unpledgetokendetails.TokenValue == 1.0 {
+			tt = token.RBTTokenType
+		} else {
+			tt = token.PartTokenType
+		}
+
+		if up.testNet && unpledgetokendetails.TokenValue == 1.0 {
 			tt = token.TestTokenType
+		} else {
+			tt = token.TestPartTokenType
 		}
 		b := up.w.GetLatestTokenBlock(t, tt)
 		if b == nil {
@@ -241,6 +255,7 @@ func (up *UnPledge) runUnpledge() {
 			count++
 		}
 		f.Close()
+		fmt.Println("callback function is ", up.cb)
 		if up.cb == nil {
 			up.log.Error("Callback function not set, removing the token from the unpledge list")
 			up.s.Delete(UnpledgeQueueTable, &UnpledgeTokenList{}, "token=?", t)

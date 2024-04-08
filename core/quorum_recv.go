@@ -207,6 +207,18 @@ func (c *Core) quorumRBTConsensus(req *ensweb.Request, did string, qdc didcrypto
 	wt := sc.GetTransTokenInfo()
 
 	for i := range wt {
+		var tknType int
+		if wt[i].TokenValue == 1.0 {
+			tknType = token.RBTTokenType
+		} else {
+			tknType = token.PartTokenType
+		}
+
+		if c.testNet && wt[i].TokenValue == 1.0 {
+			tknType = token.TestTokenType
+		} else {
+			tknType = token.TestPartTokenType
+		}
 		b := c.w.GetLatestTokenBlock(wt[i].Token, wt[i].TokenType)
 		if b == nil {
 			c.log.Error("pledge token check Failed, failed to get latest block")
@@ -219,7 +231,7 @@ func (c *Core) quorumRBTConsensus(req *ensweb.Request, did string, qdc didcrypto
 			return c.l.RenderJSON(req, &crep, http.StatusOK)
 		}
 		if c.checkIsUnpledged(b) {
-			unpledgeId := c.getUnpledgeId(wt[i].Token)
+			unpledgeId := c.getUnpledgeId(wt[i].Token, tknType)
 			if unpledgeId == "" {
 				c.log.Error("Failed to fetch proof file CID")
 				crep.Message = "Failed to fetch proof file CID"
@@ -240,7 +252,7 @@ func (c *Core) quorumRBTConsensus(req *ensweb.Request, did string, qdc didcrypto
 			pcs := util.BytesToString(pcb)
 
 			senderAddr := cr.SenderPeerID + "." + sc.GetSenderDID()
-			rdid, tid, err := c.getProofverificationDetails(wt[i].Token, senderAddr)
+			rdid, tid, err := c.getProofverificationDetails(wt[i].Token, senderAddr, tknType)
 			if err != nil {
 				c.log.Error("Failed to get pledged for token reciveer did", "err", err)
 				crep.Message = "Failed to get pledged for token reciveer did"
@@ -1229,17 +1241,34 @@ func (c *Core) tokenArbitration(req *ensweb.Request) *ensweb.Result {
 	return c.l.RenderJSON(req, &srep, http.StatusOK)
 }
 
-func (c *Core) getProofverificationDetails(tokenID string, senderAddr string) (string, string, error) {
+func (c *Core) getProofverificationDetails(tokenID string, senderAddr string, tknType int) (string, string, error) {
 	var receiverDID, txnId string
-	tt := token.RBTTokenType
-	blk := c.w.GetLatestTokenBlock(tokenID, tt)
+	fmt.Println("Unpldege proof verification for token ", tokenID, " having sender ", senderAddr)
+	//tt := token.RBTTokenType
+	// unpledgetokendetails, err := c.w.ReadToken(tokenID)
+	// if err != nil {
+	// 	c.log.Error("Failed to fetch unpledge token details for token ", tokenID, "error: ", err)
+	// }
+	// var tt int
+	// if unpledgetokendetails.TokenValue == 1.0 {
+	// 	tt = token.RBTTokenType
+	// } else {
+	// 	tt = token.PartTokenType
+	// }
 
+	// if c.testNet && unpledgetokendetails.TokenValue == 1.0 {
+	// 	tt = token.TestTokenType
+	// } else {
+	// 	tt = token.TestPartTokenType
+	// }
+	blk := c.w.GetLatestTokenBlock(tokenID, tknType)
+	fmt.Println("Latest block size is ", blk)
 	pbid, err := blk.GetPrevBlockID(tokenID)
 	if err != nil {
 		c.log.Error("Failed to get the block id. Unable to verify proof file")
 		return "", "", err
 	}
-	pBlk, err := c.w.GetTokenBlock(tokenID, tt, pbid)
+	pBlk, err := c.w.GetTokenBlock(tokenID, tknType, pbid)
 	if err != nil {
 		c.log.Error("Failed to get the Previous Block Unable to verify proof file")
 		return "", "", err
@@ -1267,6 +1296,8 @@ func (c *Core) getProofverificationDetails(tokenID string, senderAddr string) (s
 	if tokenPledgedForDetailsStr != "" {
 		tpfdArray := strings.Split(tokenPledgedForDetailsStr, ",")
 
+		fmt.Println("tokenPledgedForDetailsStr ", tokenPledgedForDetailsStr)
+
 		tokenPledgedFor := tpfdArray[0]
 		tokenPledgedForTypeStr := tpfdArray[1]
 		tokenPledgedForBlockId := tpfdArray[2]
@@ -1277,6 +1308,7 @@ func (c *Core) getProofverificationDetails(tokenID string, senderAddr string) (s
 			return "", "", err
 		}
 		//check if token chain of token pledged for already synced to node
+		fmt.Println("token pledged for is ", tokenPledgedFor, ", token pldged for type is ", tokenPledgedForType)
 		pledgedfBlk, err := c.w.GetTokenBlock(tokenPledgedFor, tokenPledgedForType, tokenPledgedForBlockId)
 		if err != nil {
 			c.log.Error("Failed to get the pledged for token's Block Unable to verify proof file")
