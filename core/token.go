@@ -362,7 +362,7 @@ func (c *Core) GetRequiredTokens(did string, txnAmount float64) ([]wallet.Token,
 			reqAmt = floatPrecision(reqAmt, MaxDecimalPlaces)
 		}
 
-		if (len(wholeTokens) != 0 && remWhole > 0) || (len(wholeTokens) != 0 && remWhole == 0) {
+		if (len(wholeTokens) != 0 && remWhole > 0) || (len(wholeTokens) != 0 && remWhole == 0 && reqAmt != 0) {
 			c.log.Debug("No more whole token left in wallet , rest of needed amt ", reqAmt)
 			allPartTokens, err := c.w.GetAllPartTokens(did)
 			if err != nil && err.Error() != "no records found" {

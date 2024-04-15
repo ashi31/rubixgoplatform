@@ -96,6 +96,8 @@ func (c *Core) pinCheck(token string, index int, senderPeerId string, receiverPe
 					result.Error = err
 					results[index] = result
 				}
+				//		#!todo skip pincheck for peer not able to connect // port occupied , not incrementing ensweb
+				//handle p
 				req := PinStatusReq{
 					Token: token,
 				}

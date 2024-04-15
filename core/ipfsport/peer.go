@@ -117,10 +117,13 @@ func (pm *PeerManager) OpenPeerConn(peerID string, did string, appname string) (
 			peerID: peerID,
 			did:    did,
 		}
+		//Port Incrementing
+
 		scfg := &srvcfg.Config{
 			ServerAddress: "localhost",
 			ServerPort:    fmt.Sprintf("%d", pm.lport),
 		}
+
 		p.Client, err = ensweb.NewClient(scfg, p.log)
 		if err != nil {
 			pm.log.Error("failed to create ensweb clent", "err", err)
