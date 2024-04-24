@@ -38,6 +38,7 @@ const (
 	TCBlockContentKey      string = "1"
 	TCBlockContentSigKey   string = "2"
 	TCSmartContractDataKey string = "9"
+	TCSenderSignatureKey   string = "10"
 )
 
 const (
@@ -63,6 +64,7 @@ type TokenChainBlock struct {
 	QuorumSignature   []string       `json:"quorumSignature"`
 	SmartContract     []byte         `json:"smartContract"`
 	SmartContractData string         `json:"smartContractData"`
+	SenderSignature   []string       `json:"senderSignature"`
 }
 
 type PledgeDetail struct {
@@ -140,6 +142,9 @@ func CreateNewBlock(ctcb map[string]*Block, tcb *TokenChainBlock) *Block {
 	}
 	if tcb.QuorumSignature != nil {
 		ntcb[TCQuorumSignatureKey] = tcb.QuorumSignature
+	}
+	if tcb.SenderSignature != nil {
+		ntcb[TCSenderSignatureKey] = tcb.SenderSignature
 	}
 	if tcb.SmartContract != nil {
 		ntcb[TCSmartContractKey] = tcb.SmartContract

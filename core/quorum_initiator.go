@@ -129,6 +129,12 @@ type CreditSignature struct {
 	Hash          string `json:"hash"`
 }
 
+type SenderSignature struct {
+	NLSS_share   string `json:"nlss_share_signature"`
+	Private_sign string `json:"priv_signature"`
+	DID          string `json:"sender_did"`
+}
+
 type TokenArbitrationReq struct {
 	Block []byte `json:"block"`
 }
@@ -381,7 +387,7 @@ func (c *Core) initiateConsensus(cr *ConensusRequest, sc *contract.Contract, dc 
 			c.log.Debug("String: token is ", token, " issuetype is ", issueType)
 			issueTypeInt, err1 := strconv.Atoi(issueType)
 			if err1 != nil {
-				errMsg := fmt.Sprintf("Consensus failed due to token chain sync issue, issueType string conversion, err %v", err1) 
+				errMsg := fmt.Sprintf("Consensus failed due to token chain sync issue, issueType string conversion, err %v", err1)
 				c.log.Error(errMsg)
 				return nil, nil, fmt.Errorf(errMsg)
 			}
@@ -397,7 +403,7 @@ func (c *Core) initiateConsensus(cr *ConensusRequest, sc *contract.Contract, dc 
 				syncIssueTokenDetails.TokenStatus = wallet.TokenChainSyncIssue
 				c.log.Debug("sync issue token details status updated", syncIssueTokenDetails)
 				c.w.UpdateToken(syncIssueTokenDetails)
-				return nil, nil, errors.New(br.Message) 
+				return nil, nil, errors.New(br.Message)
 			}
 		}
 		if !br.Status {
@@ -906,6 +912,29 @@ func (c *Core) pledgeQuorumToken(cr *ConensusRequest, sc *contract.Contract, tid
 	}
 	//tokenList = append(tokenList, cr.PartTokens...)
 
+	//Fetching sender signature to add it to transaction details
+	senderdid := sc.GetSenderDID()
+	_, sender_ss, sender_ps, err := sc.GetHashSig(senderdid)
+	if err != nil {
+		c.log.Error("failed to fetch sender sign", "err", err)
+		return nil, fmt.Errorf("failed to fetch sender sign")
+	}
+	sender_sign_ := &SenderSignature{
+		NLSS_share:   sender_ss,
+		Private_sign: sender_ps,
+		DID:          senderdid,
+	}
+	fmt.Println("sender signature before marshaling :", sender_sign_)
+	sender_sign, err := json.Marshal(sender_sign_)
+	if err != nil {
+		c.log.Error("failed to parse sender sign", "err", err)
+		return nil, fmt.Errorf("failed to parse sender sign")
+	}
+
+	senderSignature := make([]string, 0)
+	senderSignature = append(senderSignature, string(sender_sign))
+	fmt.Println("sender sign after marshaling: ", senderSignature)
+
 	var tcb block.TokenChainBlock
 
 	if cr.Mode == SmartContractDeployMode {
@@ -964,6 +993,7 @@ func (c *Core) pledgeQuorumToken(cr *ConensusRequest, sc *contract.Contract, tid
 			QuorumSignature: credit,
 			SmartContract:   sc.GetBlock(),
 			PledgeDetails:   ptds,
+			SenderSignature: senderSignature,
 		}
 	}
 
