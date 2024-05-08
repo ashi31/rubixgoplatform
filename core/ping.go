@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,6 +22,7 @@ type PingResponse struct {
 // PingSetup will setup the ping route
 func (c *Core) PingSetup() {
 	c.l.AddRoute(APIPingPath, "GET", c.PingRecevied)
+	c.l.AddRoute(APIGetTokenCount, "GET", c.getTokenCount)
 }
 
 // PingRecevied is the handler for ping request
@@ -50,4 +52,37 @@ func (c *Core) PingPeer(peerID string) (string, error) {
 		return "", err
 	}
 	return pingResp.Message, nil
+}
+
+func (c *Core) PingPeerWithBalance(peerID string, did string) (string, error) {
+	p, err := c.pm.OpenPeerConn(peerID, did, c.getCoreAppName(peerID))
+	if err != nil {
+		return "", err
+	}
+	q := make(map[string]string)
+	q["peerID"] = peerID
+	q["did"] = did
+
+	var ps model.PeerTokenCountResponse
+	err = p.SendJSONRequest("GET", APIGetTokenCount, q, nil, &ps, false)
+	if err != nil {
+		return "", err
+	}
+	balance := fmt.Sprintf("%v", ps.DIDBalance)
+	count := fmt.Sprintf("%v", ps.TokenStatus12)
+	msg := "Balance of peer ID : " + peerID + " and DID : " + did + " is = " + balance + " and number of tokens with token status 12 is : " + count
+	c.log.Info(msg)
+	defer p.Close()
+	return msg, nil
+}
+
+func (c *Core) getTokenCount(req *ensweb.Request) *ensweb.Result {
+	did := c.l.GetQuerry(req, "did")
+	peerID := c.l.GetQuerry(req, "peerID")
+	var ps model.PeerTokenCountResponse
+	balance, count := c.w.GetBalance(did, peerID)
+	ps.DIDBalance = balance
+	ps.TokenStatus12 = count
+	return c.l.RenderJSON(req, &ps, http.StatusOK)
+
 }

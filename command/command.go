@@ -77,6 +77,7 @@ const (
 	GetTokenBlock                  string = "gettokenblock"
 	GetSmartContractData           string = "getsmartcontractdata"
 	ReleaseAllLockedTokensCmd      string = "releaseAllLockedTokens"
+	GetPeerBalanceCmd              string = "getpeerbalance"
 )
 
 var commands = []string{VersionCmd,
@@ -570,6 +571,8 @@ func Run(args []string) {
 		cmd.executeSmartcontract()
 	case ReleaseAllLockedTokensCmd:
 		cmd.releaseAllLockedTokens()
+	case GetPeerBalanceCmd:
+		cmd.getPeerBalance()
 	default:
 		cmd.log.Error("Invalid command")
 	}
